@@ -1,0 +1,55 @@
+Installation odoo
+Link : https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-16-04
+
+Étape 1 - Installation de docker
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+$ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+$ sudo apt-get update
+
+$ apt-cache policy docker-ce
+
+$ sudo apt-get install -y docker-ce
+
+$ sudo systemctl status docker
+
+
+Étape 2 - Exécution de la commande Docker sans Sudo (facultatif)
+$ sudo usermod -aG docker ${USER}
+
+$ su - ${USER}
+$ id -nG
+$ sudo usermod -aG docker username
+$ 
+
+Étape 3 - Téléchargement image et installation (ex:postgres) si image inexistant
+$docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo -e POSTGRES_DB=postgres --name db postgres:10
+
+Étape 4 - Installation (ex:postgres) si image locale
+$ cp /postgres.tar /home/rm435/Bureau
+$ docker load < postgres.tar
+$ docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo -e POSTGRES_DB=postgres --name db postgres:10
+
+Étape 5 - Création réseau
+$ docker network create pg
+
+Étape 6 - Installation et liaison de pgadmin au réseau
+$ docker run -d -p 5050:5050 --name pgadmin --network=pg thajeztah/pgadmin4
+
+Étape 7 - Lier postgres - pgadmin au réseau
+$ docker network connect pg db
+
+Étape 8 - Installation d'odoo avec une personnalisation des paramètres 
+custom -> /mnt/extra-addons
+cache -> /var/lib
+log -> /var/log
+odoo.conf ->  /etc/odoo/odoo.conf
+
+docker run -v /home/rm435/Dev/odoo10/custom_addons/:/mnt/extra-addons -v /home/rm435/Dev/odoo10/cache/:/var/lib/odoo -v /home/rm435/Dev/odoo10/log/:/var/log/odoo -v /home/rm435/Dev/odoo10:/etc/odoo -p 8269:8069 --name odoo --link db:db -t odoo:10 
+
+Arguments et options
+-p : port                                                       -d : daemon
+-v : dossier                                                    --name nom : donner un nom au conteneur
+--link : lier deux conteneurs                                   -e : specier variable d'environnement
+-t : pointer l'images si ce n'est pas dans son emplacement exacte (dernier)
